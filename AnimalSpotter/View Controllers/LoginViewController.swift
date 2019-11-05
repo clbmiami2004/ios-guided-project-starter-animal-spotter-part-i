@@ -35,10 +35,55 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     
     @IBAction func buttonTapped(_ sender: UIButton) {
         // perform login or sign up operation based on loginType
-        
+        guard let apiController = apiController else {return}
+        if let username = usernameTextField.text,
+            !username.isEmpty,
+            let password = passwordTextField.text,
+            !password.isEmpty {
+            let user = User(username: username, password: password)
+            
+            
+            if loginType == .signUp {
+                apiController.signUp(with: user) { (error) in
+                    if let error = error {
+                        print("Error ocurred during sign up: \(error)")
+                    }else {
+                        DispatchQueue.main.async {
+                            let alertController = UIAlertController(title: "Sign Up Succesfull", message: "Now Please Log in", preferredStyle: .alert)
+                            let alertAction = UIAlertAction(title: "Ok", style: .default, handler: nil)
+                            alertController.addAction(alertAction)
+                            self.present(alertController, animated: true) {
+                                self.loginType = .signIn
+                                self.loginTypeSegmentedControl.selectedSegmentIndex = 1
+                                self.signInButton.setTitle("Sign in", for: .normal)
+                            }
+                        }
+                    }
+                }
+            }else {
+                //Run sign in API call
+                apiController.signIn(with: user) { (error) in
+                    if let error = error {
+                        print("Error occurred during sign up \(error)")
+                    }else {
+                        DispatchQueue.main.async {
+                            self..dismiss(animated: true, completion: nil)
+                        }
+                    }
+                }
+            }
+        }
     }
     
     @IBAction func signInTypeChanged(_ sender: UISegmentedControl) {
         // switch UI between login types
+        if sender.selectedSegmentIndex == 0 {
+            loginType = .signUp
+            signInButton.setTitle("Sign up", for: .normal)
+            
+        }else {
+            loginType = .signIn
+            signInButton.setTitle("Sign in", for: .normal)
+        }
     }
 }
